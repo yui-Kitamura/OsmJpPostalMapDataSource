@@ -99,6 +99,14 @@ public class Main {
             Files.copy(inputStream, indexOutputPath, StandardCopyOption.REPLACE_EXISTING);
             System.out.println("index.htmlをコピーしました: " + indexOutputPath.toAbsolutePath());
         }
+        Path faviconOutputPath = outputDir.resolve("favicon.png");
+        try (InputStream inputStream = Main.class.getResourceAsStream("/content/favicon.png")) {
+            if (inputStream == null) {
+                throw new IOException("favicon.pngが見つかりません");
+            }
+            Files.copy(inputStream, faviconOutputPath, StandardCopyOption.REPLACE_EXISTING);
+            System.out.println("favicon.pngをコピーしました: " + faviconOutputPath.toAbsolutePath());
+        }
 
         Path masterDir = outputDataDir.resolve("master");
         if (!Files.exists(masterDir)) {
