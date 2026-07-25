@@ -96,7 +96,7 @@
                                   const modified = new Date(dateStr).getTime();
                                   if (modified < new Date().getTime() - 24*60*60*1000){
                                       timeElement.classList.add("old");
-                                  } else if (modified < new Date.getTime() - 12*60*60*1000){
+                                  } else if (modified < new Date().getTime() - 12*60*60*1000){
                                       timeElement.classList.add("delay");
                                   }
                               }
