@@ -8,6 +8,10 @@
         content: '▼';
         color: darkred;
     }
+    time.delay::after {
+        content: '▽';
+        color: darkred;
+    }
   </style>
 </head>
 <body>
@@ -90,9 +94,10 @@
                                   // Parse custom format: yyyy/MM/ddTHH:mm:ss
                                   const dateStr = pref.lastModified.replace('T', ' ').replace(/\//g, '-');
                                   const modified = new Date(dateStr).getTime();
-                                  const oneDayAgo = new Date().getTime() - 24*60*60*1000; 
-                                  if (modified < oneDayAgo){
+                                  if (modified < new Date().getTime() - 24*60*60*1000){
                                       timeElement.classList.add("old");
+                                  } else if (modified < new Date.getTime() - 12*60*60*1000){
+                                      timeElement.classList.add("delay");
                                   }
                               }
                           }
