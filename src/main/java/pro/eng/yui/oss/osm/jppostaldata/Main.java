@@ -128,7 +128,7 @@ public class Main {
         Set<PrefectureDataJsonGenerator.Result> resultSet = new HashSet<>();
         boolean targetFound = targetPrefecture == null;
         
-        try (InputStream inputStream = Main.class.getResourceAsStream("/content/pref.json")) {
+        try (InputStream inputStream = Main.class.getResourceAsStream("/content/master/pref.json")) {
             if (inputStream == null) { throw new IOException("pref.jsonが見つかりません"); }
             
             JsonNode rootNode = mapper.readTree(inputStream);
