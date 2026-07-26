@@ -42,9 +42,11 @@ public class PrefectureDataJsonGenerator {
     public static class ResultTimestamp{
         public final String name;
         public final String lastModified;
-        public ResultTimestamp(String prefName, LocalDateTime time){
+        public final String objectCount;
+        public ResultTimestamp(String prefName, LocalDateTime time, int objectCount){
             this.name = prefName;
             lastModified = Main.FORMATTER.format(time);
+            this.objectCount = String.valueOf(objectCount);
         }
 
         @Override

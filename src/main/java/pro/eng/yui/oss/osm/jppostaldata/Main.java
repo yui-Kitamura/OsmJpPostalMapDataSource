@@ -77,7 +77,7 @@ public class Main {
                 }
             }
             prefTimestamp.add(
-                    new PrefectureDataJsonGenerator.ResultTimestamp(r.getPrefName(), r.getDataTimestamp())
+                new PrefectureDataJsonGenerator.ResultTimestamp(r.getPrefName(), r.getDataTimestamp(), r.getDataSize())
             );
         }
 
@@ -187,7 +187,8 @@ public class Main {
                     JsonObject obj = arrayData.get(i).getAsJsonObject();
                     String name = obj.get("name").getAsString();
                     LocalDateTime timestamp = LocalDateTime.from(FORMATTER.parse(obj.get("lastModified").getAsString()));
-                    prefectures.add(new PrefectureDataJsonGenerator.ResultTimestamp(name, timestamp));
+                    int objectCount = obj.get("objectCount").getAsInt();
+                    prefectures.add(new PrefectureDataJsonGenerator.ResultTimestamp(name, timestamp, objectCount));
                 }
             }
         }catch (IOException | InterruptedException ignore) { }
