@@ -62,8 +62,8 @@ public class Main {
         Files.createDirectories(outputDataDir);
 
         for (PrefectureDataJsonGenerator.Result r : results) {
-            final int prefCode = r.getPrefCode();
-            final String fileName = "jPostal_"+ String.format("%02d",prefCode) + ".json";
+            final String prefCode = String.format("%02d",r.getPrefCode());
+            final String fileName = "jPostal_"+ prefCode +".json";
             Path dataOutputPath = outputDataDir.resolve(fileName);
             mapper.writeValue(dataOutputPath.toFile(), r.getObjects());
             
@@ -74,7 +74,7 @@ public class Main {
                 }
             }
             prefTimestamp.add(
-                new PrefectureDataJsonGenerator.ResultTimestamp(r.getPrefName(), r.getDataTimestamp(), r.getDataSize())
+                new PrefectureDataJsonGenerator.ResultTimestamp(r.getPrefCode(), r.getPrefName(), r.getDataTimestamp(), r.getDataSize())
             );
         }
 
@@ -181,6 +181,7 @@ public class Main {
             
             if (arrayData != null && arrayData.isArray()) {
                 for (JsonNode obj : arrayData) {
+                    int code = obj.path("code").asInt();
                     String name = obj.path("name").asString();
                     String lastModStr = obj.path("lastModified").asString();
                     if (name.isEmpty() || lastModStr.isEmpty()) {
@@ -188,7 +189,7 @@ public class Main {
                     }
                     LocalDateTime timestamp = LocalDateTime.from(FORMATTER.parse(lastModStr));
                     int objectCount = obj.path("objectCount").asInt();
-                    prefectures.add(new PrefectureDataJsonGenerator.ResultTimestamp(name, timestamp, objectCount));
+                    prefectures.add(new PrefectureDataJsonGenerator.ResultTimestamp(code, name, timestamp, objectCount));
                 }
             }
         }catch (IOException | InterruptedException ignore) { }

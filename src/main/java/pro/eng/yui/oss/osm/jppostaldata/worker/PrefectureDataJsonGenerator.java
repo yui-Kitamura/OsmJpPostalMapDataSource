@@ -41,10 +41,12 @@ public class PrefectureDataJsonGenerator {
     }
     
     public static class ResultTimestamp{
+        public final String code;
         public final String name;
         public final String lastModified;
         public final int objectCount;
-        public ResultTimestamp(String prefName, LocalDateTime time, int objectCount){
+        public ResultTimestamp(int prefCode, String prefName, LocalDateTime time, int objectCount){
+            this.code = String.format("%02d",prefCode);
             this.name = prefName;
             lastModified = Main.FORMATTER.format(time);
             this.objectCount = objectCount;
@@ -57,12 +59,14 @@ public class PrefectureDataJsonGenerator {
                 return false;
             }
             ResultTimestamp that = (ResultTimestamp) obj;
-            return name.equals(that.name) && lastModified.equals(that.lastModified) && objectCount == that.objectCount;
+            return code == that.code && name.equals(that.name) &&
+                    lastModified.equals(that.lastModified) && objectCount == that.objectCount;
         }
 
         @Override
         public int hashCode() {
             int result = name.hashCode();
+            result = 31 * result + code.hashCode();
             result = 31 * result + lastModified.hashCode();
             result = 31 * result + Integer.hashCode(objectCount);
             return result;
