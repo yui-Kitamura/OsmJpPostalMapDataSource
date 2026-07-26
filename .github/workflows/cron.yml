@@ -2,7 +2,8 @@ name: Scheduled Execution
 
 on:
   schedule:
-    - cron: '0 */6 * * *' # 6時間毎 (00:00, 06:00, 12:00, 18:00 UTC)
+    - cron: '0 */3 * * *' # 3時間毎
+      timezone: "Asia/Tokyo"
   workflow_dispatch:
     inputs:
       prefecture:
