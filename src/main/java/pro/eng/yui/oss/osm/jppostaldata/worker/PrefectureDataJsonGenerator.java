@@ -10,6 +10,7 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletionException;
 
 public class PrefectureDataJsonGenerator {
 
@@ -75,15 +76,19 @@ public class PrefectureDataJsonGenerator {
         Map<String, Object> data = new HashMap<>();
 
         String query = OverpassQuery.getPostSearchQuery(prefName);
-        List<OsmPoi> pois = JpPostalUtil.callOverpass(query, 5, 30, 120).join();
+        try {
+            List<OsmPoi> pois = JpPostalUtil.callOverpass(query, 5, 30, 120).join();
 
-        LocalDateTime timestamp = LocalDateTime.now(Main.JST);
-        data.put("lastModified", timestamp.format(Main.FORMATTER));
-        data.put("prefectureCode", prefCode);
-        data.put("prefectureName", prefName);
-        data.put("data", pois);
-        
-        return new Result(prefCode, prefName, timestamp, data);
+            LocalDateTime timestamp = LocalDateTime.now(Main.JST);
+            data.put("lastModified", timestamp.format(Main.FORMATTER));
+            data.put("prefectureCode", prefCode);
+            data.put("prefectureName", prefName);
+            data.put("data", pois);
+
+            return new Result(prefCode, prefName, timestamp, data);
+        }catch (CompletionException e) {
+            throw new IOException(e);
+        }
     }
 }
 
