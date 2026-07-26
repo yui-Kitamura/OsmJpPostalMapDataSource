@@ -1,8 +1,5 @@
 package pro.eng.yui.oss.osm.jppostaldata;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
 import pro.eng.yui.oss.osm.jppostaldata.worker.PrefectureDataJsonGenerator;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
@@ -178,16 +175,19 @@ public class Main {
 
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
-            Gson gson = new Gson();
-            JsonObject jsonData = gson.fromJson(response.body(), JsonObject.class);
-            JsonArray arrayData = jsonData.getAsJsonArray("prefectures");
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode jsonData = mapper.readTree(response.body());
+            JsonNode arrayData = jsonData.get("prefectures");
             
-            if (arrayData != null) {
-                for (int i = 0; i < arrayData.size(); i++) {
-                    JsonObject obj = arrayData.get(i).getAsJsonObject();
-                    String name = obj.get("name").getAsString();
-                    LocalDateTime timestamp = LocalDateTime.from(FORMATTER.parse(obj.get("lastModified").getAsString()));
-                    int objectCount = obj.get("objectCount").getAsInt();
+            if (arrayData != null && arrayData.isArray()) {
+                for (JsonNode obj : arrayData) {
+                    String name = obj.path("name").asString();
+                    String lastModStr = obj.path("lastModified").asString();
+                    if (name.isEmpty() || lastModStr.isEmpty()) {
+                        continue;
+                    }
+                    LocalDateTime timestamp = LocalDateTime.from(FORMATTER.parse(lastModStr));
+                    int objectCount = obj.path("objectCount").asInt();
                     prefectures.add(new PrefectureDataJsonGenerator.ResultTimestamp(name, timestamp, objectCount));
                 }
             }

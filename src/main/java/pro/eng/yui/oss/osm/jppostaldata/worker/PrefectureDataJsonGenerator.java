@@ -42,11 +42,11 @@ public class PrefectureDataJsonGenerator {
     public static class ResultTimestamp{
         public final String name;
         public final String lastModified;
-        public final String objectCount;
+        public final int objectCount;
         public ResultTimestamp(String prefName, LocalDateTime time, int objectCount){
             this.name = prefName;
             lastModified = Main.FORMATTER.format(time);
-            this.objectCount = String.valueOf(objectCount);
+            this.objectCount = objectCount;
         }
 
         @Override
@@ -56,13 +56,14 @@ public class PrefectureDataJsonGenerator {
                 return false;
             }
             ResultTimestamp that = (ResultTimestamp) obj;
-            return name.equals(that.name) && lastModified.equals(that.lastModified);
+            return name.equals(that.name) && lastModified.equals(that.lastModified) && objectCount == that.objectCount;
         }
 
         @Override
         public int hashCode() {
             int result = name.hashCode();
             result = 31 * result + lastModified.hashCode();
+            result = 31 * result + Integer.hashCode(objectCount);
             return result;
         }
     }
