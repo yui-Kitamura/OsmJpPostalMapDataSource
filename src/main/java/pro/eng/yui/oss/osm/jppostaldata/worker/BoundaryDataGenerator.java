@@ -26,7 +26,7 @@ public class BoundaryDataGenerator {
     private final HttpClient httpClient = HttpClient.newBuilder().build();
 
     public void generate() throws IOException {
-        Path outputDir = Paths.get("pages", "data", "master");
+        Path outputDir = Paths.get("pages", "master");
         if (!Files.exists(outputDir)) {
             Files.createDirectories(outputDir);
         }
@@ -81,7 +81,7 @@ public class BoundaryDataGenerator {
     private ObjectNode loadExistingBoundary() {
         try {
             HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create("https://yui-kitamura.github.io/OsmJpPostalMapDataSource/data/master/boundary.json"))
+                    .uri(URI.create("https://yui-kitamura.github.io/OsmJpPostalMapDataSource/master/boundary.json"))
                     .GET()
                     .build();
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());

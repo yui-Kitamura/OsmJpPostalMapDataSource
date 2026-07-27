@@ -121,7 +121,7 @@ public class Main {
             System.out.println("favicon.pngをコピーしました: " + faviconOutputPath.toAbsolutePath());
         }
 
-        Path masterDir = outputDataDir.resolve("master");
+        Path masterDir = outputDir.resolve("master");
         if (!Files.exists(masterDir)) {
             Files.createDirectories(masterDir);
         }

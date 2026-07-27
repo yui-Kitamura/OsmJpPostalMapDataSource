@@ -44,8 +44,7 @@ jobs:
 
       - name: Sync generated files
         run: |
-          mkdir -p gh-pages/pages
-          rsync -av pages/ gh-pages/pages/
+          rsync -av pages/ gh-pages/
 
       - name: Commit and Push
         working-directory: gh-pages
@@ -60,7 +59,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: gh-pages/pages
+          path: gh-pages
           
   deploy:
     needs: build
