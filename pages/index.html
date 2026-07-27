@@ -25,13 +25,14 @@
     <h3>マスターデータ</h3>
     <ol>
       <li>都道府県コード（<a href="data/master/pref.json">master/pref.json</a>）</li>
+      <li>北海道振興局コード（<a href="data/master/sub/01.json">master/sub/01.json</a>）</li>
     </ol>
     <h3>データファイル</h3>
     <ul>
       <li>最終更新日（<a href="data/date.json">data/date.json</a>）</li>
       <li>データ源（OpenStreetMap）ライセンス：<a href="https://www.openstreetmap.org/copyright">©OpenStreetMap</a></li>
       <li>都道府県別データセット<ul id="ul_pref">
-        <li><a href="data/jPostal_01.json">北海道</a>（最終更新 <span id="ts_01"><time datetime=""></time></span>）（データ数 <span id="c_01">？</span>件）</li>
+        <li><a href="data/jPostal_01.json">北海道</a>（最終更新 <span id="ts_01"><time datetime=""></time></span>）</li>
         <li><a href="data/jPostal_02.json">青森県</a>（最終更新 <span id="ts_02"><time datetime=""></time></span>）（データ数 <span id="c_02">？</span>件）</li>
         <li><a href="data/jPostal_03.json">岩手県</a>（最終更新 <span id="ts_03"><time datetime=""></time></span>）（データ数 <span id="c_03">？</span>件）</li>
         <li><a href="data/jPostal_04.json">宮城県</a>（最終更新 <span id="ts_04"><time datetime=""></time></span>）（データ数 <span id="c_04">？</span>件）</li>
@@ -85,30 +86,67 @@
               .then(data => {
                   document.getElementById('status').innerText = 'Last Updated: ' + data.lastUpdated;
                   data.prefectures.forEach(pref => {
-                      const links = document.querySelectorAll('#ul_pref a');
-                      links.forEach(link => {
-                          if (link.innerText === pref.name) {
-                              const timeElement = link.parentElement.querySelector('time');
-                              if (timeElement) {
-                                  timeElement.setAttribute('datetime', pref.lastModified);
-                                  timeElement.innerText = pref.lastModified;
-
-                                  // Parse custom format: yyyy/MM/ddTHH:mm:ss
-                                  const dateStr = pref.lastModified.replace('T', ' ').replace(/\//g, '-');
-                                  const modified = new Date(dateStr).getTime();
-                                  if (modified < new Date().getTime() - 24*60*60*1000){
-                                      timeElement.classList.add("old");
-                                  } else if (modified < new Date().getTime() - 12*60*60*1000){
-                                      timeElement.classList.add("delay");
-                                  }
+                      let link = null;
+                      const allLinks = document.querySelectorAll('#ul_pref a');
+                      
+                      if (!pref.code.includes('_')) {
+                          // 都道府県本体
+                          allLinks.forEach(a => {
+                              if (a.getAttribute('href') === 'data/jPostal_' + pref.code + '.json') {
+                                  link = a;
                               }
-
-                              const countElement = link.parentElement.querySelector('span[id^="c_"]');
-                              if (countElement) {
-                                  countElement.innerText = pref.objectCount;
+                          });
+                      } else {
+                          // 振興局などのサブエリア
+                          const codes = pref.code.split('_');
+                          const parentCode = codes[0];
+                          const subCode = codes[1];
+                          
+                          // 既にリンクが存在するか確認
+                          allLinks.forEach(a => {
+                              if (a.getAttribute('href') === 'data/jPostal_' + parentCode + '_' + subCode + '.json') {
+                                  link = a;
+                              }
+                          });
+                          
+                          if (!link) {
+                              // 存在しない場合は親の直下に作成
+                              const parentLink = Array.from(allLinks).find(a => a.getAttribute('href') === 'data/jPostal_' + parentCode + '.json');
+                              if (parentLink) {
+                                  let subUl = parentLink.parentElement.querySelector('ul');
+                                  if (!subUl) {
+                                      subUl = document.createElement('ul');
+                                      parentLink.parentElement.appendChild(subUl);
+                                  }
+                                  const subLi = document.createElement('li');
+                                  subLi.innerHTML = `<a href="data/jPostal_${parentCode}_${subCode}.json">${pref.name}</a>（最終更新 <span id="ts_${pref.code}"><time datetime=""></time></span>）（データ数 <span id="c_${pref.code}">？</span>件）`;
+                                  subUl.appendChild(subLi);
+                                  link = subLi.querySelector('a');
                               }
                           }
-                      });
+                      }
+
+                      if (link) {
+                          const timeElement = link.parentElement.querySelector('time');
+                          if (timeElement) {
+                              timeElement.setAttribute('datetime', pref.lastModified);
+                              timeElement.innerText = pref.lastModified;
+
+                              // Parse custom format: yyyy/MM/ddTHH:mm:ss
+                              const dateStr = pref.lastModified.replace('T', ' ').replace(/\//g, '-');
+                              const modified = new Date(dateStr).getTime();
+                              if (modified < new Date().getTime() - 24*60*60*1000){
+                                  timeElement.classList.add("old");
+                              } else if (modified < new Date().getTime() - 12*60*60*1000){
+                                  timeElement.classList.add("delay");
+                              }
+                          }
+
+                          const countElement = link.parentElement.querySelector('span[id^="c_"]');
+                          if (countElement) {
+                              countElement.innerText = pref.objectCount;
+                          }
+                      }
                   });
               })
               .catch(error => {
