@@ -248,10 +248,10 @@ public class Main {
             
             if (arrayData != null && arrayData.isArray()) {
                 for (JsonNode obj : arrayData) {
-                    String name = obj.path("name").asString();
+                    String name = obj.path("name").asText();
                     String code = obj.path("code").asText();
                     
-                    String lastModStr = obj.path("lastModified").asString();
+                    String lastModStr = obj.path("lastModified").asText();
                     if (name.isEmpty() || lastModStr.isEmpty()) {
                         continue;
                     }
