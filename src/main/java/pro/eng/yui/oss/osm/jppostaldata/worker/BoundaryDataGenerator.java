@@ -130,7 +130,7 @@ public class BoundaryDataGenerator {
         String query = "[out:json][timeout:120];rel[\"admin_level\"=\"" + adminLevel + "\"][\"name\"=\"" + name + "\"];out bb;";
 
         int maxRetry = 5;
-        int interval = 30;
+        int interval = 15;
 
         for (int i = 0; i < maxRetry; i++) {
             try {
