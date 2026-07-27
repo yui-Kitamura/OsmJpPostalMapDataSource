@@ -146,6 +146,14 @@ public class Main {
             Files.copy(inputStream, prefOutputPath, StandardCopyOption.REPLACE_EXISTING);
             System.out.println("pref.jsonをコピーしました: " + prefOutputPath.toAbsolutePath());
         }
+        Path sub01OutputPath = masterDir.resolve("sub/01.json");
+        try (InputStream inputStream = Main.class.getResourceAsStream("/content/master/sub/01.json")) {
+            if (inputStream == null) {
+                throw new IOException("sub/01.jsonが見つかりません");
+            }
+            Files.copy(inputStream, sub01OutputPath, StandardCopyOption.REPLACE_EXISTING);
+            System.out.println("sub/01.jsonをコピーしました: " + sub01OutputPath.toAbsolutePath());
+        }
     }
 
     private static Set<PrefectureDataJsonGenerator.Result> generatePrefectureDataJson(String targetPrefecture) throws IOException {
