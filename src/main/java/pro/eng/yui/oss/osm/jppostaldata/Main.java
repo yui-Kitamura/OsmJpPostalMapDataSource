@@ -1,5 +1,6 @@
 package pro.eng.yui.oss.osm.jppostaldata;
 
+import pro.eng.yui.oss.osm.jppostaldata.worker.BoundaryDataGenerator;
 import pro.eng.yui.oss.osm.jppostaldata.worker.PrefectureDataJsonGenerator;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
@@ -56,6 +57,13 @@ public class Main {
     
     public static void main(String[] args) {
         System.out.println("定期実行開始: " + FORMATTER.format(ZonedDateTime.now(JST)));
+
+        try {
+            new BoundaryDataGenerator().generate();
+        } catch (IOException e) {
+            System.err.println("boundary.jsonの生成に失敗しました");
+            e.printStackTrace();
+        }
 
         if (args.length > 1) {
             throw new IllegalArgumentException("引数には都道府県コードまたは都道府県名を1つだけ指定してください");
