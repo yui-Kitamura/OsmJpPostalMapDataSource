@@ -10,6 +10,7 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.CompletionException;
 
 public class PrefectureDataJsonGenerator {
@@ -59,7 +60,7 @@ public class PrefectureDataJsonGenerator {
                 return false;
             }
             ResultTimestamp that = (ResultTimestamp) obj;
-            return code == that.code && name.equals(that.name) &&
+            return Objects.equals(code, that.code) && name.equals(that.name) &&
                     lastModified.equals(that.lastModified) && objectCount == that.objectCount;
         }
 

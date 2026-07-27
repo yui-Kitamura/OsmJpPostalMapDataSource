@@ -24,6 +24,35 @@ public class Main {
     
     public static final ZoneId JST = ZoneId.of("Asia/Tokyo");
     public static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("y/MM/dd'T'HH:mm:ss");
+
+    private static final Map<String, Integer> PREF_MASTER = new LinkedHashMap<>();
+    static {
+        ObjectMapper mapper = new ObjectMapper();
+        try (InputStream inputStream = Main.class.getResourceAsStream("/content/master/pref.json")) {
+            if (inputStream != null) {
+                JsonNode rootNode = mapper.readTree(inputStream);
+                if (rootNode.isArray()) {
+                    for (JsonNode node : rootNode) {
+                        if (node.has("code") && node.has("name")) {
+                            String name = node.get("name").asString();
+                            JsonNode codeNode = node.get("code");
+                            int code = 0;
+                            if (codeNode.isNumber()) {
+                                code = codeNode.asInt();
+                            } else if (codeNode.isTextual()) {
+                                try {
+                                    code = Integer.parseInt(codeNode.asText());
+                                } catch (NumberFormatException ignored) {}
+                            }
+                            PREF_MASTER.put(name, code);
+                        }
+                    }
+                }
+            }
+        } catch (IOException e) {
+            System.err.println("pref.jsonの読み込みに失敗しました");
+        }
+    }
     
     public static void main(String[] args) {
         System.out.println("定期実行開始: " + FORMATTER.format(ZonedDateTime.now(JST)));
@@ -120,40 +149,30 @@ public class Main {
     }
 
     private static Set<PrefectureDataJsonGenerator.Result> generatePrefectureDataJson(String targetPrefecture) throws IOException {
-        ObjectMapper mapper = new ObjectMapper();
         PrefectureDataJsonGenerator generator = new PrefectureDataJsonGenerator();
         Set<PrefectureDataJsonGenerator.Result> resultSet = new HashSet<>();
         boolean targetFound = targetPrefecture == null;
-        
-        try (InputStream inputStream = Main.class.getResourceAsStream("/content/master/pref.json")) {
-            if (inputStream == null) { throw new IOException("pref.jsonが見つかりません"); }
-            
-            JsonNode rootNode = mapper.readTree(inputStream);
-            if (rootNode.isArray()) {
-                for (JsonNode node : rootNode) {
-                    if (node.has("code") && node.has("name")) {
-                        int prefCode = node.get("code").asInt();
-                        String prefName = node.get("name").asString();
-                        if (targetPrefecture != null
-                                && !targetPrefecture.equals(prefName)
-                                && !targetPrefecture.equals(String.valueOf(prefCode))
-                                && !targetPrefecture.equals(String.format("%02d", prefCode))) {
-                            continue;
-                        }
-                        targetFound = true;
-                        try {
-                            PrefectureDataJsonGenerator.Result result =
-                                    generator.generate(prefCode, prefName);
-                            System.out.println(FORMATTER.format(ZonedDateTime.now(JST)) +
-                                    prefName+" 処理完了。件数: "+result.getDataSize());
-                            resultSet.add(result);
-                        }catch (IOException|IllegalStateException ioe) {
-                            System.err.println(FORMATTER.format(ZonedDateTime.now(JST)) +
-                                    node.get("name")+" 処理失敗:"+ ioe.getMessage());
-                        }
-                    }
-                    
-                }
+
+        for (Map.Entry<String, Integer> entry : PREF_MASTER.entrySet()) {
+            String prefName = entry.getKey();
+            int prefCode = entry.getValue();
+
+            if (targetPrefecture != null
+                    && !targetPrefecture.equals(prefName)
+                    && !targetPrefecture.equals(String.valueOf(prefCode))
+                    && !targetPrefecture.equals(String.format("%02d", prefCode))) {
+                continue;
+            }
+            targetFound = true;
+            try {
+                PrefectureDataJsonGenerator.Result result =
+                        generator.generate(prefCode, prefName);
+                System.out.println(FORMATTER.format(ZonedDateTime.now(JST)) +
+                        prefName + " 処理完了。件数: " + result.getDataSize());
+                resultSet.add(result);
+            } catch (IOException | IllegalStateException ioe) {
+                System.err.println(FORMATTER.format(ZonedDateTime.now(JST)) +
+                        prefName + " 処理失敗:" + ioe.getMessage());
             }
         }
 
@@ -181,8 +200,20 @@ public class Main {
             
             if (arrayData != null && arrayData.isArray()) {
                 for (JsonNode obj : arrayData) {
-                    int code = obj.path("code").asInt();
                     String name = obj.path("name").asString();
+                    JsonNode codeNode = obj.path("code");
+                    int code = 0;
+                    if (codeNode.isNumber()) {
+                        code = codeNode.asInt();
+                    } else if (codeNode.isTextual()) {
+                        try {
+                            code = Integer.parseInt(codeNode.asText());
+                        } catch (NumberFormatException ignored) {}
+                    }
+
+                    if (code == 0 && PREF_MASTER.containsKey(name)) {
+                        code = PREF_MASTER.get(name);
+                    }
                     String lastModStr = obj.path("lastModified").asString();
                     if (name.isEmpty() || lastModStr.isEmpty()) {
                         continue;
