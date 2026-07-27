@@ -159,6 +159,7 @@ public class BoundaryDataGenerator {
                     }
                     return null;
                 } else if (response.statusCode() == 429) {
+                    interval += 8;
                     System.out.println("Overpass API 429 Too Many Requests. Retrying in " + interval + "s...");
                     TimeUnit.SECONDS.sleep(interval);
                 } else if (response.statusCode() == 504) {
