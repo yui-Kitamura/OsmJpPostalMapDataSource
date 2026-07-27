@@ -129,8 +129,8 @@ public class BoundaryDataGenerator {
     private Map<String, Double> fetchBoundaryFromOverpass(String adminLevel, String name) throws Exception {
         String query = "[out:json][timeout:120];rel[\"admin_level\"=\"" + adminLevel + "\"][\"name\"=\"" + name + "\"];out bb;";
 
-        int maxRetry = 5;
-        int interval = 15;
+        int maxRetry = 3;
+        int interval = 8;
 
         for (int i = 0; i < maxRetry; i++) {
             try {
@@ -160,6 +160,9 @@ public class BoundaryDataGenerator {
                     return null;
                 } else if (response.statusCode() == 429) {
                     System.out.println("Overpass API 429 Too Many Requests. Retrying in " + interval + "s...");
+                    TimeUnit.SECONDS.sleep(interval);
+                } else if (response.statusCode() == 504) {
+                    System.out.println("Overpass API 504 Bad Gateway. Retrying in " + interval + "s...");
                     TimeUnit.SECONDS.sleep(interval);
                 } else {
                     throw new IOException("Overpass API error: " + response.statusCode());
