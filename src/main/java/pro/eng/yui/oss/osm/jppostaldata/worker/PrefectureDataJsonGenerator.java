@@ -21,6 +21,8 @@ public class PrefectureDataJsonGenerator {
     public static class Result{
         private final int code;
         public int getPrefCode(){ return code; }
+        private final String subCode;
+        public String getSubCode(){ return subCode; }
         private final String name;
         public String getPrefName(){ return name; }
 
@@ -30,11 +32,20 @@ public class PrefectureDataJsonGenerator {
         private final Map<String, Object> data;
         public Map<String, Object> getObjects(){ return data; }
         public int getDataSize(){
-            return ((List<OsmPoi>)data.get("data")).size();
+            Object dataList = data.get("data");
+            if (dataList instanceof List) {
+                return ((List<?>) dataList).size();
+            }
+            return 0;
         }
 
         public Result(int prefCode, String prefName, LocalDateTime timestamp, Map<String, Object> jsonData) {
+            this(prefCode, null, prefName, timestamp, jsonData);
+        }
+
+        public Result(int prefCode, String subCode, String prefName, LocalDateTime timestamp, Map<String, Object> jsonData) {
             this.code = prefCode;
+            this.subCode = subCode;
             this.name = prefName;
             this.dataTimestamp = timestamp;
             this.data = jsonData;
@@ -47,7 +58,10 @@ public class PrefectureDataJsonGenerator {
         public final String lastModified;
         public final int objectCount;
         public ResultTimestamp(int prefCode, String prefName, LocalDateTime time, int objectCount){
-            this.code = String.format("%02d",prefCode);
+            this(String.format("%02d",prefCode), prefName, time, objectCount);
+        }
+        public ResultTimestamp(String code, String prefName, LocalDateTime time, int objectCount){
+            this.code = code;
             this.name = prefName;
             lastModified = Main.FORMATTER.format(time);
             this.objectCount = objectCount;
@@ -78,19 +92,31 @@ public class PrefectureDataJsonGenerator {
      * @param prefCode 都道府県コード
      * @param prefName 都道府県名 */
     public Result generate(int prefCode, String prefName) throws IOException {
+        return generate(prefCode, null, 4, prefName);
+    }
+
+    /**
+     * @param prefCode 都道府県コード
+     * @param subCode サブエリアコード (null可)
+     * @param adminLevel 行政レベル
+     * @param areaName エリア名 */
+    public Result generate(int prefCode, String subCode, int adminLevel, String areaName) throws IOException {
         Map<String, Object> data = new HashMap<>();
 
-        String query = OverpassQuery.getPostSearchQuery(prefName);
+        String query = OverpassQuery.getPostSearchQuery(adminLevel, areaName);
         try {
             List<OsmPoi> pois = JpPostalUtil.callOverpass(query, 5, 30, 120).join();
 
             LocalDateTime timestamp = LocalDateTime.now(Main.JST);
             data.put("lastModified", timestamp.format(Main.FORMATTER));
             data.put("prefectureCode", prefCode);
-            data.put("prefectureName", prefName);
+            if (subCode != null) {
+                data.put("subCode", subCode);
+            }
+            data.put("prefectureName", areaName);
             data.put("data", pois);
 
-            return new Result(prefCode, prefName, timestamp, data);
+            return new Result(prefCode, subCode, areaName, timestamp, data);
         }catch (CompletionException e) {
             throw new IOException(e);
         }
