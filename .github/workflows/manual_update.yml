@@ -1,9 +1,18 @@
-name: Scheduled Execution
+name: Manual Update
 
 on:
-  schedule:
-    - cron: '0 */3 * * *' # 3時間毎
-      timezone: "Asia/Tokyo"
+  workflow_dispatch:
+    inputs:
+      prefecture:
+        description: '都道府県コード（01〜47）または都道府県名（空欄は全国）'
+        required: false
+        default: ''
+        type: string
+      update_boundary:
+        description: '境界データ（boundary.json）を更新する'
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: write
@@ -24,10 +33,20 @@ jobs:
 
       - name: Build
         run: mvn -B package
+
       - name: Run Main Method
         env:
           TARGET_PREFECTURE: ${{ inputs.prefecture }}
-        run: mvn compile exec:java -Dexec.args="$TARGET_PREFECTURE"
+          UPDATE_BOUNDARY: ${{ inputs.update_boundary }}
+        run: |
+          ARGS=""
+          if [ "$UPDATE_BOUNDARY" = "true" ]; then
+            ARGS="--boundary"
+          fi
+          if [ -n "$TARGET_PREFECTURE" ]; then
+            ARGS="$ARGS $TARGET_PREFECTURE"
+          fi
+          mvn compile exec:java -Dexec.args="$ARGS"
 
       - name: Checkout gh-pages
         uses: actions/checkout@v7.0.0
@@ -46,7 +65,7 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
           git add .
-          git diff --cached --quiet || git commit -m "Update postal data $(date -u '+%Y-%m-%d %H:%M UTC')"
+          git diff --cached --quiet || git commit -m "Manual update: $(date -u '+%Y-%m-%d %H:%M UTC')"
           git push
 
       - name: Upload artifact
