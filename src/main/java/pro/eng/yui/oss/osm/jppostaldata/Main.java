@@ -29,18 +29,32 @@ public class Main {
     public static void main(String[] args) {
         System.out.println("定期実行開始: " + FORMATTER.format(ZonedDateTime.now(JST)));
 
-        try {
-            new BoundaryDataGenerator().generate();
-        } catch (IOException e) {
-            System.err.println("boundary.jsonの生成に失敗しました");
-            e.printStackTrace();
+        boolean runBoundary = false;
+        String targetPrefecture = null;
+
+        for (String arg : args) {
+            if (arg == null || arg.isBlank()) {
+                continue;
+            }
+            if ("--boundary".equals(arg)) {
+                runBoundary = true;
+            } else {
+                if (targetPrefecture != null) {
+                    throw new IllegalArgumentException("引数には都道府県コードまたは都道府県名を1つだけ指定してください");
+                }
+                targetPrefecture = arg.trim();
+            }
         }
 
-        if (args.length > 1) {
-            throw new IllegalArgumentException("引数には都道府県コードまたは都道府県名を1つだけ指定してください");
+        if (runBoundary) {
+            try {
+                new BoundaryDataGenerator().generate();
+            } catch (IOException e) {
+                System.err.println("boundary.jsonの生成に失敗しました");
+                e.printStackTrace();
+            }
         }
-        String targetPrefecture = args.length == 0 || args[0].isBlank() ? null : args[0].trim();
-        
+
         try {
             generateJson(targetPrefecture);
         } catch (IOException e) {
