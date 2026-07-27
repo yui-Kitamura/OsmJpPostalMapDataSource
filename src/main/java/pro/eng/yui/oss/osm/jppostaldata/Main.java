@@ -154,7 +154,11 @@ public class Main {
             Files.copy(inputStream, prefOutputPath, StandardCopyOption.REPLACE_EXISTING);
             System.out.println("pref.jsonをコピーしました: " + prefOutputPath.toAbsolutePath());
         }
-        Path sub01OutputPath = masterDir.resolve("sub/01.json");
+        Path masterSubDir = masterDir.resolve("sub");
+        if (!Files.exists(masterSubDir)) {
+            Files.createDirectories(masterSubDir);
+        }
+        Path sub01OutputPath = masterSubDir.resolve("01.json");
         try (InputStream inputStream = Main.class.getResourceAsStream("/content/master/sub/01.json")) {
             if (inputStream == null) {
                 throw new IOException("sub/01.jsonが見つかりません");
