@@ -79,6 +79,17 @@ public class BoundaryDataGenerator {
     }
 
     private ObjectNode loadExistingBoundary() {
+        // 1. Check local file first
+        Path localPath = Paths.get("pages", "master", "boundary.json");
+        if (Files.exists(localPath)) {
+            JsonNode node = mapper.readTree(localPath.toFile());
+            if (node.isObject()) {
+                System.out.println("Existing boundary data loaded from local: " + localPath.toAbsolutePath());
+                return (ObjectNode) node;
+            }
+        }
+
+        // 2. Check remote if local is not available
         try {
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create("https://yui-kitamura.github.io/OsmJpPostalMapDataSource/master/boundary.json"))
@@ -88,10 +99,14 @@ public class BoundaryDataGenerator {
             if (response.statusCode() == 200) {
                 JsonNode node = mapper.readTree(response.body());
                 if (node.isObject()) {
+                    System.out.println("Existing boundary data loaded from remote.");
                     return (ObjectNode) node;
                 }
+            } else if (response.statusCode() != 404) {
+                System.err.println("Failed to fetch remote boundary data. Status: " + response.statusCode());
             }
-        } catch (Exception ignored) {
+        } catch (Exception e) {
+            System.err.println("Error fetching remote boundary data: " + e.getMessage());
         }
         return mapper.createObjectNode();
     }
@@ -114,15 +129,29 @@ public class BoundaryDataGenerator {
         try {
             Map<String, Double> bbox = fetchBoundaryFromOverpass(adminLevel, name);
             if (bbox != null) {
+                // validation: ignore if all values are 0.0
+                if (bbox.get("minlon") == 0.0 && bbox.get("maxlon") == 0.0 &&
+                        bbox.get("minlat") == 0.0 && bbox.get("maxlat") == 0.0) {
+                    System.err.println("Warning: Boundary data for " + name + " is all 0.0, skipping.");
+                    return;
+                }
+
                 ObjectNode bboxNode = subMap.putObject(subCode);
                 bboxNode.put("minLon", bbox.get("minlon"));
                 bboxNode.put("maxLon", bbox.get("maxlon"));
                 bboxNode.put("minLat", bbox.get("minlat"));
                 bboxNode.put("maxLat", bbox.get("maxlat"));
+            } else {
+                // If bbox is null, we keep existing data if present in subMap
+                if (subMap.has(subCode)) {
+                    System.out.println("Notice: Could not fetch boundary for " + name + ", keeping existing data.");
+                }
             }
-            // 失敗時は既存データを保持（何もしない）
         } catch (Exception e) {
-            System.err.println("Boundary取得失敗: " + name + " (" + adminLevel + ") " + e.getMessage());
+            System.err.println("Failed to fetch boundary: " + name + " (" + adminLevel + ") " + e.getMessage());
+            if (subMap.has(subCode)) {
+                System.out.println("Notice: Keeping existing boundary data for " + name + " due to error.");
+            }
         }
     }
 
