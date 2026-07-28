@@ -144,7 +144,7 @@
                               }
                           }
 
-                          const countElement = link.parentElement.querySelector('span[id^="c_"]');
+                          const countElement = document.getElementById('c_' + pref.code);
                           if (countElement) {
                               countElement.innerText = pref.objectCount;
                           }
