@@ -182,7 +182,7 @@ public class Main {
             } else if (codeNode.isTextual()) {
                 prefCode = Integer.parseInt(codeNode.asText());
             }
-            String subFile = node.has("sub") ? node.get("sub").asText() : null;
+            String subAreaCode = node.has("sub") ? node.get("sub").asText() : null;
 
             if (targetPrefecture != null
                     && !targetPrefecture.equals(prefName)
@@ -192,7 +192,7 @@ public class Main {
             }
             targetFound = true;
 
-            if (subFile != null) {
+            if (subAreaCode != null) {
                 // サブエリア設定がある場合
                 // 1. 本体の空データ (data部分を空にして残す)
                 Map<String, Object> emptyData = new HashMap<>();
@@ -205,7 +205,7 @@ public class Main {
 
                 // 2. サブエリアごとのデータ取得
                 JsonNode subArray;
-                try (InputStream subIs = Main.class.getResourceAsStream("/content/master/sub/" + subFile)) {
+                try (InputStream subIs = Main.class.getResourceAsStream("/content/master/sub/"+ subAreaCode +".json")) {
                     subArray = mapper.readTree(subIs);
                 }
                 for (JsonNode subNode : subArray) {
