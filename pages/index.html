@@ -86,6 +86,7 @@
               .then(response => response.json())
               .then(data => {
                   document.getElementById('status').innerText = 'Last Updated: ' + data.lastUpdated;
+                  data.prefectures.sort((a, b) => a.code.localeCompare(b.code));
                   data.prefectures.forEach(pref => {
                       let link = null;
                       const allLinks = document.querySelectorAll('#ul_pref a');
