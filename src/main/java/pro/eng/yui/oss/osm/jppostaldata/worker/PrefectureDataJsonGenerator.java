@@ -105,7 +105,7 @@ public class PrefectureDataJsonGenerator {
 
         String query = OverpassQuery.getPostSearchQuery(adminLevel, areaName);
         try {
-            List<OsmPoi> pois = JpPostalUtil.callOverpass(query, 5, 30, 120).join();
+            List<OsmPoi> pois = JpPostalUtil.callOverpass(query, 5, 45, 180).join();
 
             LocalDateTime timestamp = LocalDateTime.now(Main.JST);
             data.put("lastModified", timestamp.format(Main.FORMATTER));
