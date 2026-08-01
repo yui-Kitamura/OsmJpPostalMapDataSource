@@ -27,9 +27,15 @@ public class CityAndSuburbDataGenerator extends AbstDataGenerator {
         if (prefArray != null && prefArray.isArray()) {
             for (JsonNode prefNode : prefArray) {
                 String prefName = prefNode.path("name").asText();
+                String prefCodeRaw = prefNode.path("code").asText();
+                String prefCode = prefCodeRaw;
+                try {
+                    prefCode = String.format("%02d", Integer.parseInt(prefCodeRaw));
+                } catch (NumberFormatException ignored) {}
+
                 System.out.println(Main.FORMATTER.format(java.time.ZonedDateTime.now(Main.JST)) + " Processing " + prefName + " for cities and suburbs...");
                 try {
-                    fetchAndAddCities(resultList, prefName);
+                    fetchAndAddCities(resultList, prefName, prefCode);
                 } catch (Exception e) {
                     System.err.println("Failed to fetch cities for " + prefName + ": " + e.getMessage());
                     e.printStackTrace();
@@ -41,7 +47,7 @@ public class CityAndSuburbDataGenerator extends AbstDataGenerator {
         System.out.println("cityAndSuburb.jsonを生成しました: " + outputPath.toAbsolutePath());
     }
 
-    private void fetchAndAddCities(ArrayNode resultList, String prefName) throws Exception {
+    private void fetchAndAddCities(ArrayNode resultList, String prefName, String prefCode) throws Exception {
         // 都道府県内の admin_level 7, 8 を取得
         String query = "[out:json][timeout:180];" +
                 "area[\"name\"=\"" + prefName + "\"][\"admin_level\"=\"4\"]->.a;" +
@@ -71,11 +77,9 @@ public class CityAndSuburbDataGenerator extends AbstDataGenerator {
                 if (tags == null) continue;
 
                 String name = tags.path("name").asText();
-                String adminLevel = tags.path("admin_level").asText();
 
                 ObjectNode entry = mapper.createObjectNode();
                 entry.put("name", name);
-                entry.put("admin_level", adminLevel);
 
                 JsonNode bounds = el.get("bounds");
                 if (bounds != null) {
@@ -102,6 +106,7 @@ public class CityAndSuburbDataGenerator extends AbstDataGenerator {
                         }
                     }
                 }
+                entry.put("is_in", prefCode);
                 resultList.add(entry);
             }
         }
