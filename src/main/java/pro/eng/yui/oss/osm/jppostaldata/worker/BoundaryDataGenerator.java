@@ -70,7 +70,7 @@ public class BoundaryDataGenerator extends AbstDataGenerator {
         }
 
         // 4. 書き出し
-        mapper.writerWithDefaultPrettyPrinter().writeValue(outputPath.toFile(), boundaryData);
+        simplifiedWriter.writeValue(outputPath.toFile(), boundaryData);
         System.out.println("boundary.jsonを生成しました: " + outputPath.toAbsolutePath());
     }
 

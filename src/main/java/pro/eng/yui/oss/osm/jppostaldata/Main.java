@@ -3,8 +3,11 @@ package pro.eng.yui.oss.osm.jppostaldata;
 import pro.eng.yui.oss.osm.jppostaldata.worker.BoundaryDataGenerator;
 import pro.eng.yui.oss.osm.jppostaldata.worker.CityAndSuburbDataGenerator;
 import pro.eng.yui.oss.osm.jppostaldata.worker.PrefectureDataJsonGenerator;
+import tools.jackson.core.util.DefaultIndenter;
+import tools.jackson.core.util.DefaultPrettyPrinter;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectWriter;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -128,7 +131,10 @@ public class Main {
         
         data.put("prefectures", prefTimestamp);
         Path outputPath = outputDataDir.resolve("date.json");
-        mapper.writeValue(outputPath.toFile(), data);
+        ObjectWriter writer = mapper.writer().with(new DefaultPrettyPrinter()
+                .withObjectIndenter(new DefaultPrettyPrinter.FixedSpaceIndenter())
+                .withArrayIndenter(new DefaultIndenter("  ", "\n")));
+        writer.writeValue(outputPath.toFile(), data);
         System.out.println("JSONを生成しました: " + outputPath.toAbsolutePath());
         
         Path indexOutputPath = outputDir.resolve("index.html");

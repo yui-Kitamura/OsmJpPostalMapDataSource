@@ -71,7 +71,7 @@ public class CityAndSuburbDataGenerator extends AbstDataGenerator {
             }
         }
 
-        mapper.writerWithDefaultPrettyPrinter().writeValue(outputPath.toFile(), resultList);
+        simplifiedWriter.writeValue(outputPath.toFile(), resultList);
         System.out.println("cityAndSuburb.jsonを生成しました: " + outputPath.toAbsolutePath());
     }
 

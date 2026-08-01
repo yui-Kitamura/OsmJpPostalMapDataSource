@@ -1,8 +1,11 @@
 package pro.eng.yui.oss.osm.jppostaldata.worker;
 
 import pro.eng.yui.oss.osm.jppostaldata.Main;
+import tools.jackson.core.util.DefaultIndenter;
+import tools.jackson.core.util.DefaultPrettyPrinter;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectWriter;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -15,9 +18,17 @@ import java.nio.charset.StandardCharsets;
 import java.util.concurrent.TimeUnit;
 
 public abstract class AbstDataGenerator {
-
+    
     protected final ObjectMapper mapper = new ObjectMapper();
+    protected final ObjectWriter simplifiedWriter;
     protected final HttpClient httpClient = HttpClient.newBuilder().build();
+
+    protected AbstDataGenerator() {
+        DefaultPrettyPrinter pp = new DefaultPrettyPrinter()
+                .withObjectIndenter(new DefaultPrettyPrinter.FixedSpaceIndenter())
+                .withArrayIndenter(new DefaultIndenter("  ", "\n"));
+        simplifiedWriter = mapper.writer().with(pp);
+    }
 
     protected JsonNode loadPrefJson() throws IOException {
         try (InputStream is = Main.class.getResourceAsStream("/content/master/pref.json")) {
