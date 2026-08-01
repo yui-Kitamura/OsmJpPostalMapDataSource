@@ -15,13 +15,28 @@ import java.util.Map;
 public class CityAndSuburbDataGenerator extends AbstDataGenerator {
 
     public void generate() throws IOException {
+        generate(null);
+    }
+
+    public void generate(String targetPrefecture) throws IOException {
         Path outputDir = Paths.get("pages", "master");
         if (!Files.exists(outputDir)) {
             Files.createDirectories(outputDir);
         }
         Path outputPath = outputDir.resolve("cityAndSuburb.json");
 
-        ArrayNode resultList = mapper.createArrayNode();
+        ArrayNode resultList;
+        if (targetPrefecture != null && Files.exists(outputPath)) {
+            try {
+                resultList = (ArrayNode) mapper.readTree(outputPath.toFile());
+            } catch (Exception e) {
+                System.err.println("Failed to load existing cityAndSuburb.json, starting fresh: " + e.getMessage());
+                resultList = mapper.createArrayNode();
+            }
+        } else {
+            resultList = mapper.createArrayNode();
+        }
+
         JsonNode prefArray = loadPrefJson();
 
         if (prefArray != null && prefArray.isArray()) {
@@ -33,12 +48,25 @@ public class CityAndSuburbDataGenerator extends AbstDataGenerator {
                     prefCode = String.format("%02d", Integer.parseInt(prefCodeRaw));
                 } catch (NumberFormatException ignored) {}
 
+                if (targetPrefecture != null) {
+                    if (!targetPrefecture.equals(prefName) &&
+                        !targetPrefecture.equals(prefCodeRaw) &&
+                        !targetPrefecture.equals(prefCode)) {
+                        continue;
+                    }
+                    // target found, remove existing entries for this prefCode
+                    for (int i = resultList.size() - 1; i >= 0; i--) {
+                        if (prefCode.equals(resultList.get(i).path("is_in").asText())) {
+                            resultList.remove(i);
+                        }
+                    }
+                }
+
                 System.out.println(Main.FORMATTER.format(java.time.ZonedDateTime.now(Main.JST)) + " Processing " + prefName + " for cities and suburbs...");
                 try {
                     fetchAndAddCities(resultList, prefName, prefCode);
                 } catch (Exception e) {
                     System.err.println("Failed to fetch cities for " + prefName + ": " + e.getMessage());
-                    e.printStackTrace();
                 }
             }
         }

@@ -54,10 +54,14 @@ public abstract class AbstDataGenerator {
                     throw new IOException("Overpass API error: " + response.statusCode());
                 }
             } catch (Exception e) {
-                if (i == maxRetry - 1) throw e;
+                if (i == maxRetry - 1) {
+                    System.err.println("Overpass API error after " + maxRetry + " attempts: " + e.getMessage());
+                    throw e;
+                }
                 TimeUnit.SECONDS.sleep(interval);
             }
         }
+        System.err.println("Overpass API failed to return data after " + maxRetry + " attempts.");
         return null;
     }
 }

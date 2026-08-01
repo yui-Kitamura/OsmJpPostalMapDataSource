@@ -61,7 +61,7 @@ public class Main {
 
         if (runCity) {
             try {
-                new CityAndSuburbDataGenerator().generate();
+                new CityAndSuburbDataGenerator().generate(targetPrefecture);
             } catch (IOException e) {
                 System.err.println("cityAndSuburb.jsonの生成に失敗しました");
                 e.printStackTrace();
