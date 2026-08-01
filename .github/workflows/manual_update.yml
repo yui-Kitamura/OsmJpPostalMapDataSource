@@ -13,6 +13,11 @@ on:
         required: false
         default: false
         type: boolean
+      update_city:
+        description: '市区町村境界データ（cityAndSuburb.json）を更新する'
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: write
@@ -38,10 +43,14 @@ jobs:
         env:
           TARGET_PREFECTURE: ${{ inputs.prefecture }}
           UPDATE_BOUNDARY: ${{ inputs.update_boundary }}
+          UPDATE_CITY: ${{ inputs.update_city }}
         run: |
           ARGS=""
           if [ "$UPDATE_BOUNDARY" = "true" ]; then
             ARGS="--boundary"
+          fi
+          if [ "$UPDATE_CITY" = "true" ]; then
+            ARGS="$ARGS --city"
           fi
           if [ -n "$TARGET_PREFECTURE" ]; then
             ARGS="$ARGS $TARGET_PREFECTURE"

@@ -18,12 +18,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
-public class BoundaryDataGenerator {
-
-    private final ObjectMapper mapper = new ObjectMapper();
-    private final HttpClient httpClient = HttpClient.newBuilder().build();
+public class BoundaryDataGenerator extends AbstDataGenerator {
 
     public void generate() throws IOException {
         Path outputDir = Paths.get("pages", "master");
@@ -111,13 +107,6 @@ public class BoundaryDataGenerator {
         return mapper.createObjectNode();
     }
 
-    private JsonNode loadPrefJson() throws IOException {
-        try (InputStream is = Main.class.getResourceAsStream("/content/master/pref.json")) {
-            if (is == null) return null;
-            return mapper.readTree(is);
-        }
-    }
-
     private JsonNode loadSubJson(String subFile) throws IOException {
         try (InputStream is = Main.class.getResourceAsStream("/content/master/sub/" + subFile)) {
             if (is == null) return null;
@@ -158,48 +147,19 @@ public class BoundaryDataGenerator {
     private Map<String, Double> fetchBoundaryFromOverpass(String adminLevel, String name) throws Exception {
         String query = "[out:json][timeout:120];rel[\"admin_level\"=\"" + adminLevel + "\"][\"name\"=\"" + name + "\"];out bb;";
 
-        int maxRetry = 3;
-        int interval = 8;
-
-        for (int i = 0; i < maxRetry; i++) {
-            try {
-                String form = "data=" + URLEncoder.encode(query, StandardCharsets.UTF_8);
-                HttpRequest request = HttpRequest.newBuilder()
-                        .uri(URI.create("https://overpass-api.de/api/interpreter"))
-                        .POST(HttpRequest.BodyPublishers.ofString(form))
-                        .header("Content-Type", "application/x-www-form-urlencoded")
-                        .build();
-
-                HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-
-                if (response.statusCode() == 200) {
-                    JsonNode root = mapper.readTree(response.body());
-                    JsonNode elements = root.get("elements");
-                    if (elements != null && elements.isArray() && elements.size() > 0) {
-                        JsonNode bounds = elements.get(0).get("bounds");
-                        if (bounds != null) {
-                            Map<String, Double> res = new HashMap<>();
-                            res.put("minlat", bounds.path("minlat").asDouble());
-                            res.put("minlon", bounds.path("minlon").asDouble());
-                            res.put("maxlat", bounds.path("maxlat").asDouble());
-                            res.put("maxlon", bounds.path("maxlon").asDouble());
-                            return res;
-                        }
-                    }
-                    return null;
-                } else if (response.statusCode() == 429) {
-                    interval += 8;
-                    System.out.println("Overpass API 429 Too Many Requests. Retrying in " + interval + "s...");
-                    TimeUnit.SECONDS.sleep(interval);
-                } else if (response.statusCode() == 504) {
-                    System.out.println("Overpass API 504 Bad Gateway. Retrying in " + interval + "s...");
-                    TimeUnit.SECONDS.sleep(interval);
-                } else {
-                    throw new IOException("Overpass API error: " + response.statusCode());
+        JsonNode root = executeOverpassQuery(query);
+        if (root != null) {
+            JsonNode elements = root.get("elements");
+            if (elements != null && elements.isArray() && elements.size() > 0) {
+                JsonNode bounds = elements.get(0).get("bounds");
+                if (bounds != null) {
+                    Map<String, Double> res = new HashMap<>();
+                    res.put("minlat", bounds.path("minlat").asDouble());
+                    res.put("minlon", bounds.path("minlon").asDouble());
+                    res.put("maxlat", bounds.path("maxlat").asDouble());
+                    res.put("maxlon", bounds.path("maxlon").asDouble());
+                    return res;
                 }
-            } catch (Exception e) {
-                if (i == maxRetry - 1) throw e;
-                TimeUnit.SECONDS.sleep(interval);
             }
         }
         return null;
