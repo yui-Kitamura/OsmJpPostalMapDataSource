@@ -2,7 +2,7 @@ name: Scheduled Execution
 
 on:
   schedule:
-    - cron: '0 */3 * * *' # 3時間毎
+    - cron: '27 */2 * * *' # 2時間毎
       timezone: "Asia/Tokyo"
 
 permissions:
