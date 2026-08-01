@@ -25,14 +25,10 @@ public class CityAndSuburbDataGenerator extends AbstDataGenerator {
         }
         Path outputPath = outputDir.resolve("cityAndSuburb.json");
 
+        JsonNode existing = loadExistingData("master/cityAndSuburb.json");
         ArrayNode resultList;
-        if (targetPrefecture != null && Files.exists(outputPath)) {
-            try {
-                resultList = (ArrayNode) mapper.readTree(outputPath.toFile());
-            } catch (Exception e) {
-                System.err.println("Failed to load existing cityAndSuburb.json, starting fresh: " + e.getMessage());
-                resultList = mapper.createArrayNode();
-            }
+        if (existing != null && existing.isArray()) {
+            resultList = (ArrayNode) existing;
         } else {
             resultList = mapper.createArrayNode();
         }
@@ -48,25 +44,34 @@ public class CityAndSuburbDataGenerator extends AbstDataGenerator {
                     prefCode = String.format("%02d", Integer.parseInt(prefCodeRaw));
                 } catch (NumberFormatException ignored) {}
 
-                if (targetPrefecture != null) {
-                    if (!targetPrefecture.equals(prefName) &&
-                        !targetPrefecture.equals(prefCodeRaw) &&
-                        !targetPrefecture.equals(prefCode)) {
-                        continue;
-                    }
-                    // target found, remove existing entries for this prefCode
-                    for (int i = resultList.size() - 1; i >= 0; i--) {
-                        if (prefCode.equals(resultList.get(i).path("is_in").asText())) {
-                            resultList.remove(i);
-                        }
-                    }
+                boolean shouldUpdate = (targetPrefecture == null) ||
+                        targetPrefecture.equals(prefName) ||
+                        targetPrefecture.equals(prefCodeRaw) ||
+                        targetPrefecture.equals(prefCode);
+
+                if (!shouldUpdate) {
+                    continue;
                 }
 
                 System.out.println(Main.FORMATTER.format(java.time.ZonedDateTime.now(Main.JST)) + " Processing " + prefName + " for cities and suburbs...");
                 try {
-                    fetchAndAddCities(resultList, prefName, prefCode);
+                    // Fetch into a temporary array to ensure we have data before removing old ones
+                    ArrayNode temp = mapper.createArrayNode();
+                    fetchAndAddCities(temp, prefName, prefCode);
+
+                    if (temp.size() > 0) {
+                        // target found or full run, remove existing entries for this prefCode
+                        for (int i = resultList.size() - 1; i >= 0; i--) {
+                            if (prefCode.equals(resultList.get(i).path("is_in").asText())) {
+                                resultList.remove(i);
+                            }
+                        }
+                        resultList.addAll(temp);
+                    } else {
+                        System.out.println("No data returned for " + prefName + ", keeping existing data.");
+                    }
                 } catch (Exception e) {
-                    System.err.println("Failed to fetch cities for " + prefName + ": " + e.getMessage());
+                    System.err.println("Failed to fetch cities for " + prefName + ", keeping existing data: " + e.getMessage());
                 }
             }
         }

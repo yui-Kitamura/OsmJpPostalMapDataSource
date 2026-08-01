@@ -29,7 +29,8 @@ public class BoundaryDataGenerator extends AbstDataGenerator {
         Path outputPath = outputDir.resolve("boundary.json");
 
         // 1. 既存データのロード
-        ObjectNode boundaryData = loadExistingBoundary();
+        JsonNode existing = loadExistingData("master/boundary.json");
+        ObjectNode boundaryData = (existing != null && existing.isObject()) ? (ObjectNode) existing : mapper.createObjectNode();
 
         // 2. pref.json のロード
         JsonNode prefArray = loadPrefJson();
@@ -74,38 +75,6 @@ public class BoundaryDataGenerator extends AbstDataGenerator {
         System.out.println("boundary.jsonを生成しました: " + outputPath.toAbsolutePath());
     }
 
-    private ObjectNode loadExistingBoundary() {
-        // 1. Check local file first
-        Path localPath = Paths.get("pages", "master", "boundary.json");
-        if (Files.exists(localPath)) {
-            JsonNode node = mapper.readTree(localPath.toFile());
-            if (node.isObject()) {
-                System.out.println("Existing boundary data loaded from local: " + localPath.toAbsolutePath());
-                return (ObjectNode) node;
-            }
-        }
-
-        // 2. Check remote if local is not available
-        try {
-            HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create("https://yui-kitamura.github.io/OsmJpPostalMapDataSource/master/boundary.json"))
-                    .GET()
-                    .build();
-            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-            if (response.statusCode() == 200) {
-                JsonNode node = mapper.readTree(response.body());
-                if (node.isObject()) {
-                    System.out.println("Existing boundary data loaded from remote.");
-                    return (ObjectNode) node;
-                }
-            } else if (response.statusCode() != 404) {
-                System.err.println("Failed to fetch remote boundary data. Status: " + response.statusCode());
-            }
-        } catch (Exception e) {
-            System.err.println("Error fetching remote boundary data: " + e.getMessage());
-        }
-        return mapper.createObjectNode();
-    }
 
     private JsonNode loadSubJson(String subFile) throws IOException {
         try (InputStream is = Main.class.getResourceAsStream("/content/master/sub/" + subFile)) {

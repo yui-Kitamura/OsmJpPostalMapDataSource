@@ -15,6 +15,9 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.concurrent.TimeUnit;
 
 public abstract class AbstDataGenerator {
@@ -35,6 +38,40 @@ public abstract class AbstDataGenerator {
             if (is == null) return null;
             return mapper.readTree(is);
         }
+    }
+
+    protected JsonNode loadExistingData(String relativePath) {
+        // 1. Check local
+        Path localPath = Paths.get("pages", relativePath);
+        if (Files.exists(localPath)) {
+            try {
+                JsonNode node = mapper.readTree(localPath.toFile());
+                System.out.println("Loaded existing data from local: " + localPath.toAbsolutePath());
+                return node;
+            } catch (Exception e) {
+                System.err.println("Failed to read local " + relativePath + ": " + e.getMessage());
+            }
+        }
+
+        // 2. Check remote
+        try {
+            String remoteUrl = "https://yui-kitamura.github.io/OsmJpPostalMapDataSource/" + relativePath;
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(remoteUrl))
+                    .GET()
+                    .build();
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            if (response.statusCode() == 200) {
+                JsonNode node = mapper.readTree(response.body());
+                System.out.println("Loaded existing data from remote: " + remoteUrl);
+                return node;
+            } else if (response.statusCode() != 404) {
+                System.err.println("Failed to fetch remote " + relativePath + ". Status: " + response.statusCode());
+            }
+        } catch (Exception e) {
+            System.err.println("Error fetching remote " + relativePath + ": " + e.getMessage());
+        }
+        return null;
     }
 
     protected JsonNode executeOverpassQuery(String query) throws Exception {
