@@ -29,6 +29,9 @@ public class PrefectureDataJsonGenerator {
         private final LocalDateTime dataTimestamp;
         public LocalDateTime getDataTimestamp() { return dataTimestamp; }
 
+        private final LocalDateTime lastLoaded;
+        public LocalDateTime getLastLoaded() { return lastLoaded; }
+
         private final Map<String, Object> data;
         public Map<String, Object> getObjects(){ return data; }
         public int getDataSize(){
@@ -40,14 +43,19 @@ public class PrefectureDataJsonGenerator {
         }
 
         public Result(int prefCode, String prefName, LocalDateTime timestamp, Map<String, Object> jsonData) {
-            this(prefCode, null, prefName, timestamp, jsonData);
+            this(prefCode, null, prefName, timestamp, timestamp, jsonData);
         }
 
         public Result(int prefCode, String subCode, String prefName, LocalDateTime timestamp, Map<String, Object> jsonData) {
+            this(prefCode, subCode, prefName, timestamp, timestamp, jsonData);
+        }
+
+        public Result(int prefCode, String subCode, String prefName, LocalDateTime lastModified, LocalDateTime lastLoaded, Map<String, Object> jsonData) {
             this.code = prefCode;
             this.subCode = subCode;
             this.name = prefName;
-            this.dataTimestamp = timestamp;
+            this.dataTimestamp = lastModified;
+            this.lastLoaded = lastLoaded;
             this.data = jsonData;
         }
     }
@@ -56,14 +64,16 @@ public class PrefectureDataJsonGenerator {
         public final String code;
         public final String name;
         public final String lastModified;
+        public final String lastLoaded;
         public final int objectCount;
-        public ResultTimestamp(int prefCode, String prefName, LocalDateTime time, int objectCount){
-            this(String.format("%02d",prefCode), prefName, time, objectCount);
+        public ResultTimestamp(int prefCode, String prefName, LocalDateTime modified, LocalDateTime loaded, int objectCount){
+            this(String.format("%02d",prefCode), prefName, modified, loaded, objectCount);
         }
-        public ResultTimestamp(String code, String prefName, LocalDateTime time, int objectCount){
+        public ResultTimestamp(String code, String prefName, LocalDateTime modified, LocalDateTime loaded, int objectCount){
             this.code = code;
             this.name = prefName;
-            lastModified = Main.FORMATTER.format(time);
+            this.lastModified = Main.FORMATTER.format(modified);
+            this.lastLoaded = Main.FORMATTER.format(loaded);
             this.objectCount = objectCount;
         }
 
@@ -75,7 +85,9 @@ public class PrefectureDataJsonGenerator {
             }
             ResultTimestamp that = (ResultTimestamp) obj;
             return Objects.equals(code, that.code) && name.equals(that.name) &&
-                    lastModified.equals(that.lastModified) && objectCount == that.objectCount;
+                    lastModified.equals(that.lastModified) &&
+                    lastLoaded.equals(that.lastLoaded) &&
+                    objectCount == that.objectCount;
         }
 
         @Override
@@ -83,6 +95,7 @@ public class PrefectureDataJsonGenerator {
             int result = name.hashCode();
             result = 31 * result + code.hashCode();
             result = 31 * result + lastModified.hashCode();
+            result = 31 * result + lastLoaded.hashCode();
             result = 31 * result + Integer.hashCode(objectCount);
             return result;
         }
@@ -109,6 +122,7 @@ public class PrefectureDataJsonGenerator {
 
             LocalDateTime timestamp = LocalDateTime.now(Main.JST);
             data.put("lastModified", timestamp.format(Main.FORMATTER));
+            data.put("lastLoaded", timestamp.format(Main.FORMATTER));
             data.put("prefectureCode", prefCode);
             if (subCode != null) {
                 data.put("subCode", subCode);

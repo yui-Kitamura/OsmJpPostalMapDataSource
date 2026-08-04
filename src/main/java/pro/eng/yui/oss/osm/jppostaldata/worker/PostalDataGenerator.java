@@ -1,6 +1,7 @@
 package pro.eng.yui.oss.osm.jppostaldata.worker;
 
 import pro.eng.yui.oss.osm.jppostaldata.Main;
+import pro.eng.yui.oss.osm.lib.jppostalcore.types.OsmPoi;
 
 import tools.jackson.databind.JsonNode;
 
@@ -56,16 +57,25 @@ public class PostalDataGenerator extends AbstDataGenerator {
                 resultTimestampCode = prefCode;
             }
             Path dataOutputPath = outputDataDir.resolve(fileName);
-            mapper.writeValue(dataOutputPath.toFile(), r.getObjects());
 
+            LocalDateTime lastModified = r.getDataTimestamp();
             for (int i=0; i<prefTimestamp.size(); i++) {
                 if (prefTimestamp.get(i).code.equals(resultTimestampCode)) {
-                    prefTimestamp.remove(i);
+                    PrefectureDataJsonGenerator.ResultTimestamp exist = prefTimestamp.remove(i);
+                    if (!isDataChanged(fileName, (List<OsmPoi>)r.getObjects().get("data"))) {
+                        lastModified = LocalDateTime.from(Main.FORMATTER.parse(exist.lastModified));
+                    }
                     break;
                 }
             }
+
+            r.getObjects().put("lastModified", Main.FORMATTER.format(lastModified));
+            r.getObjects().put("lastLoaded", Main.FORMATTER.format(r.getLastLoaded()));
+
+            mapper.writeValue(dataOutputPath.toFile(), r.getObjects());
+
             prefTimestamp.add(
-                new PrefectureDataJsonGenerator.ResultTimestamp(resultTimestampCode, r.getPrefName(), r.getDataTimestamp(), r.getDataSize())
+                new PrefectureDataJsonGenerator.ResultTimestamp(resultTimestampCode, r.getPrefName(), lastModified, r.getLastLoaded(), r.getDataSize())
             );
         }
 
@@ -222,15 +232,49 @@ public class PostalDataGenerator extends AbstDataGenerator {
                     String code = obj.path("code").asText();
                     
                     String lastModStr = obj.path("lastModified").asText();
+                    String lastLoadStr = obj.path("lastLoaded").asText();
                     if (name.isEmpty() || lastModStr.isEmpty()) {
                         continue;
                     }
-                    LocalDateTime timestamp = LocalDateTime.from(Main.FORMATTER.parse(lastModStr));
+                    LocalDateTime modified = LocalDateTime.from(Main.FORMATTER.parse(lastModStr));
+                    LocalDateTime loaded;
+                    if (!lastLoadStr.isEmpty()) {
+                        loaded = LocalDateTime.from(Main.FORMATTER.parse(lastLoadStr));
+                    } else {
+                        loaded = modified;
+                    }
                     int objectCount = obj.path("objectCount").asInt();
-                    prefectures.add(new PrefectureDataJsonGenerator.ResultTimestamp(code, name, timestamp, objectCount));
+                    prefectures.add(new PrefectureDataJsonGenerator.ResultTimestamp(code, name, modified, loaded, objectCount));
                 }
             }
         }
         return prefectures;
+    }
+
+    private boolean isDataChanged(String fileName, List<OsmPoi> newPois) {
+        JsonNode root = loadExistingData("data/" + fileName);
+        if (root == null || !root.has("data")) {
+            return true;
+        }
+        JsonNode existingData = root.get("data");
+        if (!existingData.isArray()) {
+            return true;
+        }
+        if (existingData.size() != newPois.size()) {
+            return true;
+        }
+
+        Map<Long, Long> existingMap = new HashMap<>();
+        for (JsonNode node : existingData) {
+            existingMap.put(node.get("id").asLong(), node.get("ver").asLong());
+        }
+
+        for (OsmPoi poi : newPois) {
+            Long existingVer = existingMap.get(poi.getId());
+            if (existingVer == null || existingVer != poi.getVer()) {
+                return true;
+            }
+        }
+        return false;
     }
 }
