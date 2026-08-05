@@ -110,9 +110,13 @@ public class CityAndSuburbDataGenerator extends AbstDataGenerator {
                 if (tags == null) continue;
 
                 String name = tags.path("name").asText();
+                String kana = tags.path("name:ja-Hira").asText();
 
                 ObjectNode entry = mapper.createObjectNode();
                 entry.put("name", name);
+                if (kana != null && !kana.isEmpty()) {
+                    entry.put("kana", kana);
+                }
 
                 JsonNode bounds = el.get("bounds");
                 if (bounds != null) {

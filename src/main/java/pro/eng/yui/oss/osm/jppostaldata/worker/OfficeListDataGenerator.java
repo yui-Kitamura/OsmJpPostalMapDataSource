@@ -62,9 +62,13 @@ public class OfficeListDataGenerator extends AbstDataGenerator {
                 for (OsmPoi poi : pois) {
                     if ("post_office".equals(poi.getTag("amenity"))) {
                         String name = poi.getTag("name");
+                        String kana = poi.getTag("name:ja-Hira");
                         if (name != null && !name.isEmpty()) {
                             ObjectNode office = mapper.createObjectNode();
                             office.put("name", name);
+                            if (kana != null && !kana.isEmpty()) {
+                            office.put("kana", kana);
+                            }
                             office.put("is_in", resultTimestampCode);
                             office.put("poiType", poi.getType());
                             office.put("poiId", poi.getId());

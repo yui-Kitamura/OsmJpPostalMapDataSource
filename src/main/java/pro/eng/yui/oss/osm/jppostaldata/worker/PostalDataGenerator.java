@@ -75,7 +75,7 @@ public class PostalDataGenerator extends AbstDataGenerator {
             mapper.writeValue(dataOutputPath.toFile(), r.getObjects());
 
             prefTimestamp.add(
-                new PrefectureDataJsonGenerator.ResultTimestamp(resultTimestampCode, r.getPrefName(), lastModified, r.getLastLoaded(), r.getDataSize())
+                new PrefectureDataJsonGenerator.ResultTimestamp(resultTimestampCode, r.getPrefName(), r.getPrefKana(), lastModified, r.getLastLoaded(), r.getDataSize())
             );
         }
 
@@ -149,6 +149,7 @@ public class PostalDataGenerator extends AbstDataGenerator {
 
         for (JsonNode node : prefArray) {
             String prefName = node.get("name").asText();
+            String prefKana = node.has("kana") ? node.get("kana").asText() : "";
             int prefCode = 0;
             JsonNode codeNode = node.get("code");
             if (codeNode.isNumber()) {
@@ -174,8 +175,9 @@ public class PostalDataGenerator extends AbstDataGenerator {
                 emptyData.put("lastModified", timestamp.format(Main.FORMATTER));
                 emptyData.put("prefectureCode", prefCode);
                 emptyData.put("prefectureName", prefName);
+                emptyData.put("prefectureKana", prefKana);
                 emptyData.put("data", Collections.emptyList());
-                resultSet.add(new PrefectureDataJsonGenerator.Result(prefCode, prefName, timestamp, emptyData));
+                resultSet.add(new PrefectureDataJsonGenerator.Result(prefCode, prefName, prefKana, timestamp, emptyData));
 
                 // 2. サブエリアごとのデータ取得
                 JsonNode subArray;
@@ -186,9 +188,10 @@ public class PostalDataGenerator extends AbstDataGenerator {
                     String subCode = subNode.get("code").asText();
                     int adminLevel = subNode.get("admin_level").asInt();
                     String subName = subNode.get("name").asText();
+                    String subKana = subNode.has("kana") ? subNode.get("kana").asText() : "";
                     try {
                         PrefectureDataJsonGenerator.Result result =
-                                generator.generate(prefCode, subCode, adminLevel, subName);
+                                generator.generate(prefCode, subCode, adminLevel, subName, subKana);
                         System.out.println(Main.FORMATTER.format(ZonedDateTime.now(Main.JST)) + " " +
                                 subName + " 処理完了。件数: " + result.getDataSize());
                         resultSet.add(result);
@@ -201,7 +204,7 @@ public class PostalDataGenerator extends AbstDataGenerator {
                 // サブエリア設定がない場合
                 try {
                     PrefectureDataJsonGenerator.Result result =
-                            generator.generate(prefCode, prefName);
+                            generator.generate(prefCode, prefName, prefKana);
                     System.out.println(Main.FORMATTER.format(ZonedDateTime.now(Main.JST)) + " " +
                             prefName + " 処理完了。件数: " + result.getDataSize());
                     resultSet.add(result);
@@ -230,6 +233,7 @@ public class PostalDataGenerator extends AbstDataGenerator {
                 for (JsonNode obj : arrayData) {
                     String name = obj.path("name").asText();
                     String code = obj.path("code").asText();
+                    String kana = obj.path("kana").asText();
                     
                     String lastModStr = obj.path("lastModified").asText();
                     String lastLoadStr = obj.path("lastLoaded").asText();
@@ -244,7 +248,7 @@ public class PostalDataGenerator extends AbstDataGenerator {
                         loaded = modified;
                     }
                     int objectCount = obj.path("objectCount").asInt();
-                    prefectures.add(new PrefectureDataJsonGenerator.ResultTimestamp(code, name, modified, loaded, objectCount));
+                    prefectures.add(new PrefectureDataJsonGenerator.ResultTimestamp(code, name, kana, modified, loaded, objectCount));
                 }
             }
         }
