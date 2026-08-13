@@ -4056,6 +4056,7 @@
   { "name" : "和郵便局", "is_in" : "01_05", "poiType" : "way", "poiId" : 721050477 },
   { "name" : "妹背牛郵便局", "is_in" : "01_05", "poiType" : "way", "poiId" : 729835139 },
   { "name" : "秩父別郵便局", "is_in" : "01_05", "poiType" : "way", "poiId" : 722393393 },
+  { "name" : "深川西簡易郵便局", "is_in" : "01_05", "poiType" : "way", "poiId" : 913916569 },
   { "name" : "深川郵便局", "kana" : "ふかがわゆうびんきょく", "is_in" : "01_05", "poiType" : "way", "poiId" : 912429115 },
   { "name" : "納内郵便局", "is_in" : "01_05", "poiType" : "way", "poiId" : 919771733 },
   { "name" : "弘瀬簡易郵便局", "kana" : "ひろせ かんいゆうびんきょく", "is_in" : "39", "poiType" : "node", "poiId" : 1423737457 },
