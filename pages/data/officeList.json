@@ -13155,7 +13155,6 @@
   { "name" : "蟻ノ首郵便局", "kana" : "ありのくび ゆうびんきょく", "is_in" : "37", "poiType" : "node", "poiId" : 1423743654 },
   { "name" : "松崎簡易郵便局", "kana" : "まつざき かんいゆうびんきょく", "is_in" : "37", "poiType" : "node", "poiId" : 1423739595 },
   { "name" : "詫間郵便局", "kana" : "たくまゆうびんきょく", "is_in" : "37", "poiType" : "node", "poiId" : 1423744180 },
-  { "name" : "箱簡易郵便局", "is_in" : "37", "poiType" : "node", "poiId" : 1423743190 },
   { "name" : "粟島郵便局", "kana" : "あわしま ゆうびんきょく", "is_in" : "37", "poiType" : "node", "poiId" : 1423743199 },
   { "name" : "志々島簡易郵便局", "is_in" : "37", "poiType" : "node", "poiId" : 1423737522 },
   { "name" : "下高瀬簡易郵便局", "kana" : "しもたかせ かんいゆうびんきょく", "is_in" : "37", "poiType" : "node", "poiId" : 1423707089 },
