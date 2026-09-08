@@ -22389,6 +22389,7 @@
   { "name" : "江別大麻西郵便局", "is_in" : "01_01", "poiType" : "way", "poiId" : 184705336 },
   { "name" : "江別大麻郵便局", "is_in" : "01_01", "poiType" : "way", "poiId" : 185282617 },
   { "name" : "野幌若葉郵便局", "is_in" : "01_01", "poiType" : "way", "poiId" : 184705742 },
+  { "name" : "野幌郵便局", "is_in" : "01_01", "poiType" : "way", "poiId" : 170997905 },
   { "name" : "野幌錦町郵便局", "is_in" : "01_01", "poiType" : "way", "poiId" : 171773101 },
   { "name" : "江別郵便局", "is_in" : "01_01", "poiType" : "way", "poiId" : 171878180 },
   { "name" : "石狩親船郵便局", "kana" : "いしかりおやふねゆうびんきょく", "is_in" : "01_01", "poiType" : "way", "poiId" : 203002721 },
