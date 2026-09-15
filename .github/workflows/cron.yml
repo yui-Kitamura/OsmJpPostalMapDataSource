@@ -2,7 +2,7 @@ name: Scheduled Execution
 
 on:
   schedule:
-    - cron: '27 */3 * * *' # 3時間毎
+    - cron: '27 9,13,18,22 * * *'
       timezone: "Asia/Tokyo"
 
 concurrency:
